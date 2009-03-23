@@ -41,6 +41,30 @@ buildTree = (fix growLevel) . (map Leaf)
       join l@(Leaf _)       r@(Node ct _ _)  = Node (ct + 1) l r
       join l@(Node ctl _ _) r@(Node ctr _ _) = Node (ctl + ctr) l r
 
+-- Extracts the n-th element from the tree and returns that element,
+-- paired with a tree with the element deleted.
+-- The function maintains the invariant of the completeness of the
+-- tree: all internal nodes are always full.
+-- NOTE: the collection of patterns below is deliberately not
+--       complete.
+--       All the missing cases may not occur
+--       (and if they do, that's an error).
+extractTree :: Int -> Tree a -> (a, Tree a)
+extractTree 0 (Node _ (Leaf e) r) = (e, r)
+extractTree 1 (Node 2 (Leaf l) (Leaf r)) = (r, Leaf l)
+extractTree n (Node c (Leaf l) r) =
+    let (e, r') = extractTree (n - 1) r
+    in (e, Node (c - 1) (Leaf l) r')
+
+extractTree n (Node n' l (Leaf e))
+    | n + 1 == n' = (e, l)
+
+extractTree n (Node c l@(Node cl _ _) r)
+    | n < cl = let (e, l') = extractTree n l
+               in (e, Node (c - 1) l' r)
+    | otherwise = let (e, r') = extractTree (n - cl) r
+                  in (e, Node (c - 1) l r')
+
 
 -- Given a sequence (e1,...en) to shuffle, and a sequence
 -- (r1,...r[n-1]) of numbers such that r[i] is an independent sample
@@ -52,31 +76,8 @@ shuffle elements = shuffleTree (buildTree elements)
       shuffleTree (Leaf e) [] = [e]
       shuffleTree tree (r : rs) =
           let (b, rest) = extractTree r tree
-	  in b : (shuffleTree rest rs)
+          in b : (shuffleTree rest rs)
 
-      -- Extracts the n-th element from the tree and returns
-      -- that element, paired with a tree with the element
-      -- deleted.
-      -- The function maintains the invariant of the completeness
-      -- of the tree: all internal nodes are always full.
-      -- NOTE: the collection of patterns below is deliberately not
-      --       complete.
-      --       All the missing cases may not occur
-      --       (and if they do, that's an error).
-      extractTree 0 (Node _ (Leaf e) r) = (e, r)
-      extractTree 1 (Node 2 (Leaf l) (Leaf r)) = (r, Leaf l)
-      extractTree n (Node c (Leaf l) r) =
-	  let (e, r') = extractTree (n - 1) r
-	  in (e, Node (c - 1) (Leaf l) r')
-
-      extractTree n (Node n' l (Leaf e))
-	  | n + 1 == n' = (e, l)
-
-      extractTree n (Node c l@(Node cl _ _) r)
-	  | n < cl = let (e, l') = extractTree n l
-		     in (e, Node (c - 1) l' r)
-	  | otherwise = let (e, r') = extractTree (n - cl) r
-			in (e, Node (c - 1) l r')
 
 -- Given a sequence (e1,...en) to shuffle, its length, and a random
 -- generator, compute the corresponding permutation of the input
