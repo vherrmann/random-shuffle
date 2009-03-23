@@ -3,7 +3,10 @@
 -- Copyright   : (c) 2009 Oleg Kiselyov, Manlio Perillo
 -- License     : BSD3 (see LICENSE file)
 --
--- http://okmij.org/ftp/Haskell/perfect-shuffle.txt
+-- Random shuffle of a list.
+--
+-- Based on /perfect shuffle/ by Oleg Kiselyov, see
+-- <http://okmij.org/ftp/Haskell/perfect-shuffle.txt>.
 --
 
 module System.Random.Shuffle
@@ -16,16 +19,18 @@ import Data.Function (fix)
 import System.Random (RandomGen, randomR)
 
 
--- A complete binary tree, of leaves and internal nodes.
--- Internal node: Node card l r
+-- |A complete binary tree, of leaves and internal nodes.
+--
+-- Internal node: @Node card l r@,
 -- where card is the number of leaves under the node.
--- Invariant: card >=2. All internal tree nodes are always full.
+--
+-- Invariant: @card >=2@. All internal tree nodes are always full.
 data Tree a = Leaf {-# UNPACK #-} !a
             | Node {-# UNPACK #-} !Int !(Tree a) !(Tree a)
               deriving Show
 
 
--- Convert a sequence (e1...en) to a complete binary tree
+-- |Convert a sequence @(e1...en)@ to a complete binary tree.
 buildTree :: [a] -> Tree a
 buildTree = (fix growLevel) . (map Leaf)
     where
@@ -41,8 +46,9 @@ buildTree = (fix growLevel) . (map Leaf)
       join l@(Leaf _)       r@(Node ct _ _)  = Node (ct + 1) l r
       join l@(Node ctl _ _) r@(Node ctr _ _) = Node (ctl + ctr) l r
 
--- Extracts the n-th element from the tree and returns that element,
+-- |Extracts the @n-th@ element from the tree and returns that element,
 -- paired with a tree with the element deleted.
+--
 -- The function maintains the invariant of the completeness of the
 -- tree: all internal nodes are always full.
 extractTree :: Int -> Tree a -> (a, Tree a)
@@ -63,9 +69,9 @@ extractTree n (Node c l@(Node cl _ _) r)
     | otherwise = let (e, r') = extractTree (n - cl) r
                   in (e, Node (c - 1) l r')
 
--- Given a sequence (e1,...en) to shuffle, and a sequence
--- (r1,...r[n-1]) of numbers such that r[i] is an independent sample
--- from a uniform random distribution [0..n-i], compute the
+-- |Given a sequence @(e1,...en)@ to shuffle, and a sequence
+-- @(r1,...r[n-1])@ of numbers such that @r[i]@ is an independent sample
+-- from a uniform random distribution @[0..n-i]@, compute the
 -- corresponding permutation of the input sequence.
 shuffle :: [a] -> [Int] -> [a]
 shuffle elements = shuffleTree (buildTree elements)
@@ -77,13 +83,13 @@ shuffle elements = shuffleTree (buildTree elements)
           in b : (shuffleTree rest rs)
 
 
--- Given a sequence (e1,...en) to shuffle, its length, and a random
+-- |Given a sequence @(e1,...en)@ to shuffle, its length, and a random
 -- generator, compute the corresponding permutation of the input
 -- sequence.
 shuffle' :: RandomGen gen => [a] -> Int -> gen -> [a]
 shuffle' elements len = shuffle elements . rseq len
     where
-      -- The sequence (r1,...r[n-1]) of numbers such that r[i] is an
+      -- |The sequence (r1,...r[n-1]) of numbers such that r[i] is an
       -- independent sample from a uniform random distribution
       -- [0..n-i]
       rseq :: RandomGen gen => Int -> gen -> [Int]
