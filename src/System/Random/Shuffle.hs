@@ -74,6 +74,7 @@ extractTree n (Node c l@(Node cl _ _) r)
 -- from a uniform random distribution @[0..n-i]@, compute the
 -- corresponding permutation of the input sequence.
 shuffle :: [a] -> [Int] -> [a]
+shuffle [] = \_ -> []
 shuffle elements = shuffleTree (buildTree elements)
     where
       shuffleTree (Leaf e) [] = [e]
