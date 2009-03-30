@@ -31,6 +31,13 @@ data Tree a = Leaf {-# UNPACK #-} !a
 
 
 -- |Convert a sequence @(e1...en)@ to a complete binary tree.
+--
+-- @
+--   System.Random.Shuffle> buildTree ['a','b','c','d','e']
+--   Node 5 (Node 4 (Node 2 (Leaf 'a') (Leaf 'b'))
+--                  (Node 2 (Leaf 'c') (Leaf 'd')))
+--          (Leaf 'e')
+-- @
 buildTree :: [a] -> Tree a
 buildTree = (fix growLevel) . (map Leaf)
     where
@@ -73,6 +80,20 @@ extractTree n (Node c l@(Node cl _ _) r)
 -- @(r1,...r[n-1])@ of numbers such that @r[i]@ is an independent sample
 -- from a uniform random distribution @[0..n-i]@, compute the
 -- corresponding permutation of the input sequence.
+--
+-- Note, that @rseq@ of all zeros leaves the sequence unperturbed:
+--
+-- > shuffle ['a','b','c','d','e'] [0,0,0,0]
+-- >      == "abcde"
+--
+-- The rseq of @(n-i | i<-[1..n-1])@ reverses the original sequence of
+-- elements:
+--
+-- > shuffle ['a','b','c','d','e'] [4,3,2,1]
+-- >      == "edcba"
+--
+-- > shuffle ['a','b','c','d','e'] [2,1,2,0]
+-- >      == "cbead"
 shuffle :: [a] -> [Int] -> [a]
 shuffle [] = \_ -> []
 shuffle elements = shuffleTree (buildTree elements)
