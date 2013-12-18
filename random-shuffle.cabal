@@ -21,4 +21,4 @@ library
     build-depends:      base, random
     exposed-modules:    System.Random.Shuffle
     hs-source-dirs:     src
-    ghc-options:        -Wall
+    ghc-options:        -Wall -fwarn-tabs
