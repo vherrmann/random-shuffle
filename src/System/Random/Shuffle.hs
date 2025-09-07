@@ -109,7 +109,9 @@ shuffle elements = shuffleTree (buildTree elements)
 -- generator, compute the corresponding permutation of the input
 -- sequence.
 shuffle' :: RandomGen gen => [a] -> Int -> gen -> [a]
-shuffle' elements len = shuffle elements . rseq len
+shuffle' elements len
+  | len < 0 = \_ -> []
+  | otherwise = shuffle elements . rseq len
     where
       -- |The sequence (r1,...r[n-1]) of numbers such that r[i] is an
       -- independent sample from a uniform random distribution
